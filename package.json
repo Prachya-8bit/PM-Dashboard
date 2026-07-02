@@ -1,0 +1,27 @@
+{
+  "name": "pm-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PM Dashboard — Tableau Budget Status clone, ETL + SQLite + Next.js",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start",
+    "etl": "python etl/etl.py"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^2.15.0",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0"
+  }
+}

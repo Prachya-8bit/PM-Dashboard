@@ -1,0 +1,12 @@
+# MS SQL Driver (required — choose ONE):
+pymssql>=2.3          # Recommended: pure Python, simpler setup
+# pyodbc>=5.2         # Alternative: requires ODBC Driver 18 installed
+
+# Data processing
+pandas>=1.5.0         # Data manipulation and analysis
+
+# Scheduling (optional — or use system cron/Task Scheduler)
+schedule>=1.2.0       # Job scheduling
+
+# Utilities
+python-dotenv>=0.19   # Environment variable loading

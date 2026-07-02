@@ -1,0 +1,6 @@
+# Python ETL dependencies — pick ONE:
+pymssql>=2.3          # MS SQL driver #1 (recommended, simpler)
+# pyodbc>=5.2         # MS SQL driver #2 (needs ODBC Driver 18)
+
+# Scheduling (optional — or just use system cron)
+# schedule>=1.2
