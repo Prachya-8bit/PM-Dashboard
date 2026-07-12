@@ -3,6 +3,7 @@
 // and hands serializable data to the client charts.
 import { getDashboardData } from "@/lib/dashboard-data";
 import { DashboardCharts } from "./charts";
+import { ProjectList } from "./project-list";
 
 export const dynamic = "force-dynamic"; // always fresh; swap for revalidate if you want caching
 
@@ -78,6 +79,9 @@ export default async function DashboardPage() {
         byYearBudget={data.byYearBudget}
         byYearStatus={data.byYearStatus}
       />
+
+      {/* Filterable project list (client) */}
+      <ProjectList projects={data.projects} />
     </main>
   );
 }

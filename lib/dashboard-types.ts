@@ -34,6 +34,16 @@ export interface YearStatus {
   PR_ON_PROCESS: number;
 }
 
+export interface ProjectRow {
+  name: string;
+  pm: string;
+  phase: PhaseKey;
+  year: number;
+  budgetMB: number;
+  actualMB: number;
+  committedMB: number;
+}
+
 export interface DashboardData {
   totalProjects: number;
   totalBudgetMB: number;
@@ -41,4 +51,5 @@ export interface DashboardData {
   phases: PhaseSummary[];
   byYearBudget: YearBudget[];
   byYearStatus: YearStatus[];
+  projects: ProjectRow[];
 }

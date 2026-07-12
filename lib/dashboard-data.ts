@@ -9,10 +9,11 @@ import {
   type PhaseSummary,
   type YearBudget,
   type YearStatus,
+  type ProjectRow,
   type DashboardData,
 } from "./dashboard-types";
 
-export { PHASES, type PhaseKey, type PhaseSummary, type YearBudget, type YearStatus, type DashboardData };
+export { PHASES, type PhaseKey, type PhaseSummary, type YearBudget, type YearStatus, type ProjectRow, type DashboardData };
 
 /* ------------------------------------------------------------------ *
  * 3. READS from SQLite (simple SELECTs — all data is pre-computed)
@@ -61,6 +62,21 @@ function readYearlyStatus(): YearStatus[] {
   `).all() as YearStatus[];
 }
 
+function readProjects(): ProjectRow[] {
+  const db = getDb();
+  return db.prepare(`
+    SELECT name,
+           project_manager AS pm,
+           phase_key    AS phase,
+           year,
+           budget_mb    AS budgetMB,
+           actual_mb    AS actualMB,
+           committed_mb AS committedMB
+    FROM projects
+    ORDER BY year DESC, name
+  `).all() as ProjectRow[];
+}
+
 /* ------------------------------------------------------------------ *
  * 4. PUBLIC: one call the page uses
  * ------------------------------------------------------------------ */
@@ -68,6 +84,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   const phases        = readPhaseSummary();
   const byYearBudget  = readYearlyBudget();
   const byYearStatus  = readYearlyStatus();
+  const projects      = readProjects();
 
   const totalProjects = phases.reduce((s, p) => s + p.count, 0);
   const totalBudgetMB = phases.reduce((s, p) => s + p.budgetMB, 0);
@@ -77,5 +94,5 @@ export async function getDashboardData(): Promise<DashboardData> {
     (phases.find((p) => p.key === "PO_CREATED")?.count ?? 0);
   const progressPct = totalProjects ? (progressed / totalProjects) * 100 : 0;
 
-  return { totalProjects, totalBudgetMB, progressPct, phases, byYearBudget, byYearStatus };
+  return { totalProjects, totalBudgetMB, progressPct, phases, byYearBudget, byYearStatus, projects };
 }
