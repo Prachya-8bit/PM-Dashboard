@@ -29,6 +29,8 @@ COL_BUDGET    = os.environ.get("SQL_COL_BUDGET", "budget_amount")
 COL_ACTUAL    = os.environ.get("SQL_COL_ACTUAL", "actual_amount")
 COL_COMMITTED = os.environ.get("SQL_COL_COMMITTED", "committed_amount")
 COL_DATE      = os.environ.get("SQL_COL_DATE", "project_date")
+COL_NAME      = os.environ.get("SQL_COL_NAME", "project_name")
+COL_PM        = os.environ.get("SQL_COL_PM", "project_manager")
 
 # Status → PhaseKey mapping
 STATUS_TO_PHASE = {
@@ -151,7 +153,29 @@ def fetch_yearly_status(cursor) -> list[dict]:
     return sorted(by_year.values(), key=lambda r: r["year"])
 
 
-def write_sqlite(phases, yearly_budget, yearly_status):
+def fetch_projects(cursor) -> list[dict]:
+    """Row-level: every project with its phase, year, budget, actual."""
+    query = f"""
+        SELECT {COL_NAME}, {COL_PM}, {COL_STATUS}, YEAR({COL_DATE}),
+               {COL_BUDGET}, {COL_ACTUAL}, {COL_COMMITTED}
+        FROM {TABLE}
+    """
+    cursor.execute(query)
+    out = []
+    for name, pm, status, yr, budget, actual, committed in cursor.fetchall():
+        key = STATUS_TO_PHASE.get(status)
+        if not key:
+            continue
+        out.append({
+            "name": name, "pm": pm or "", "phase": key, "year": yr,
+            "budgetMB": round((budget or 0) / MB_DIV, 2),
+            "actualMB": round((actual or 0) / MB_DIV, 2),
+            "committedMB": round((committed or 0) / MB_DIV, 2),
+        })
+    return out
+
+
+def write_sqlite(phases, yearly_budget, yearly_status, projects):
     """Write aggregated data to SQLite atomically (write to temp, then rename)."""
     Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
     tmp_path = DB_PATH + ".tmp"
@@ -204,6 +228,24 @@ def write_sqlite(phases, yearly_budget, yearly_status):
               r["PO_CREATED"], r["PO_ON_PROCESS"], r["PR_ON_PROCESS"]) for r in yearly_status],
         )
 
+        # --- projects (row-level, for filterable project list) ---
+        db.execute("""
+            CREATE TABLE projects (
+                name            TEXT,
+                project_manager TEXT,
+                phase_key       TEXT,
+                year            INTEGER,
+                budget_mb       REAL,
+                actual_mb       REAL,
+                committed_mb    REAL
+            )
+        """)
+        db.executemany(
+            "INSERT INTO projects VALUES (?,?,?,?,?,?,?)",
+            [(p["name"], p["pm"], p["phase"], p["year"], p["budgetMB"], p["actualMB"], p["committedMB"])
+             for p in projects],
+        )
+
         # --- metadata (last_run timestamp) ---
         db.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT)")
         db.execute("INSERT INTO metadata VALUES ('last_run', ?)", (datetime.now().isoformat(),))
@@ -221,6 +263,7 @@ def main():
     phases        = fetch_phase_summary(cursor)
     yearly_budget = fetch_yearly_budget(cursor)
     yearly_status = fetch_yearly_status(cursor)
+    projects      = fetch_projects(cursor)
 
     sys_conn.close()
 
@@ -233,8 +276,9 @@ def main():
     print(f"  Progress: {progress_pct}%")
     print(f"  Years budget: {len(yearly_budget)} rows")
     print(f"  Years status: {len(yearly_status)} rows")
+    print(f"  Projects: {len(projects)} rows")
 
-    write_sqlite(phases, yearly_budget, yearly_status)
+    write_sqlite(phases, yearly_budget, yearly_status, projects)
     print(f"  → SQLite written to {DB_PATH}")
     print(f"[{datetime.now().isoformat()}] ETL done.")
 
