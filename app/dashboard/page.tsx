@@ -19,8 +19,8 @@ export default async function DashboardPage() {
     <main
       style={{
         minHeight: "100vh",
-        background: "#0A0E1A",
-        color: "#fff",
+        background: "#F4F6FA",
+        color: "#1A2233",
         fontFamily:
           '-apple-system, "SF Pro Text", system-ui, "Inter", sans-serif',
         padding: "28px 32px",
@@ -31,13 +31,13 @@ export default async function DashboardPage() {
         <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0 }}>
           Budget Status Overview
         </h1>
-        <p style={{ color: "rgba(235,235,245,0.6)", fontSize: 14, marginTop: 6 }}>
-          Total Project: <strong style={{ color: "#fff" }}>{fmtInt(data.totalProjects)}</strong>
+        <p style={{ color: "rgba(26,34,51,0.6)", fontSize: 14, marginTop: 6 }}>
+          Total Project: <strong style={{ color: "#1A2233" }}>{fmtInt(data.totalProjects)}</strong>
           {"   |   "}
-          Total Budget: <strong style={{ color: "#fff" }}>{fmtInt(data.totalBudgetMB)} MB</strong>
+          Total Budget: <strong style={{ color: "#1A2233" }}>{fmtInt(data.totalBudgetMB)} MB</strong>
           {"   |   "}
           Progressed (PO Created+):{" "}
-          <strong style={{ color: "#1FBF8F" }}>{data.progressPct.toFixed(0)}%</strong>
+          <strong style={{ color: "#149A72" }}>{data.progressPct.toFixed(0)}%</strong>
         </p>
       </header>
 
@@ -54,20 +54,21 @@ export default async function DashboardPage() {
           <div
             key={p.key}
             style={{
-              background: "#141E36",
+              background: "#FFFFFF",
               border: `2px solid ${p.color}`,
               borderRadius: 14,
               padding: "14px 16px",
+              boxShadow: "0 1px 3px rgba(16,24,40,0.06)",
             }}
           >
             <div style={{ fontSize: 34, fontWeight: 800, color: p.color, lineHeight: 1 }}>
               {p.count}
             </div>
             <div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>{p.label}</div>
-            <div style={{ fontSize: 12.5, color: "rgba(235,235,245,0.7)", marginTop: 12 }}>
+            <div style={{ fontSize: 12.5, color: "rgba(26,34,51,0.65)", marginTop: 12 }}>
               Budget: {fmtM(p.budgetMB)}
             </div>
-            <div style={{ fontSize: 12.5, color: "rgba(235,235,245,0.7)" }}>
+            <div style={{ fontSize: 12.5, color: "rgba(26,34,51,0.65)" }}>
               Actual: {fmtM(p.actualMB)}
             </div>
           </div>

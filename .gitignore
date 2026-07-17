@@ -37,3 +37,4 @@ data/dashboard.db.tmp
 # ETL
 etl/__pycache__/
 etl/*.pyc
+*.tsbuildinfo

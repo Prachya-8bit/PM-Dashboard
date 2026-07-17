@@ -5,8 +5,8 @@ import { PHASES, type PhaseKey, type ProjectRow } from "@/lib/dashboard-types";
 
 const chip: React.CSSProperties = {
   background: "transparent",
-  color: "#fff",
-  border: "1px solid rgba(255,255,255,0.2)",
+  color: "#1A2233",
+  border: "1px solid rgba(16,24,40,0.2)",
   borderRadius: 8,
   padding: "6px 12px",
   fontSize: 12.5,
@@ -41,11 +41,12 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
   return (
     <section
       style={{
-        background: "#111B33",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: "#FFFFFF",
+        border: "1px solid rgba(16,24,40,0.08)",
         borderRadius: 16,
         padding: "16px 18px",
         marginTop: 16,
+        boxShadow: "0 1px 3px rgba(16,24,40,0.06)",
       }}
     >
       <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 12px" }}>
@@ -58,7 +59,7 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
           onClick={() => setPhase("ALL")}
           style={{
             ...chip,
-            borderColor: phase === "ALL" ? "#fff" : "rgba(255,255,255,0.2)",
+            borderColor: phase === "ALL" ? "#1A2233" : "rgba(16,24,40,0.2)",
             fontWeight: phase === "ALL" ? 700 : 400,
           }}
         >
@@ -71,7 +72,7 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
             style={{
               ...chip,
               color: p.color,
-              borderColor: phase === p.key ? p.color : "rgba(255,255,255,0.2)",
+              borderColor: phase === p.key ? p.color : "rgba(16,24,40,0.2)",
               fontWeight: phase === p.key ? 700 : 400,
             }}
           >
@@ -81,7 +82,7 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
         <select
           value={year}
           onChange={(e) => setYear(e.target.value === "ALL" ? "ALL" : +e.target.value)}
-          style={{ ...chip, background: "#0A0E1A" }}
+          style={{ ...chip, background: "#FFFFFF" }}
         >
           <option value="ALL">All Years</option>
           {years.map((y) => (
@@ -94,7 +95,7 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
           placeholder="Search project / PM…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ ...chip, background: "#0A0E1A", minWidth: 180, cursor: "text" }}
+          style={{ ...chip, background: "#FFFFFF", minWidth: 180, cursor: "text" }}
         />
       </div>
 
@@ -102,7 +103,7 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
-            <tr style={{ color: "rgba(235,235,245,0.6)", textAlign: "left" }}>
+            <tr style={{ color: "rgba(26,34,51,0.6)", textAlign: "left" }}>
               <th style={cell}>Project</th>
               <th style={cell}>Project Manager</th>
               <th style={cell}>Status</th>
@@ -114,7 +115,7 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
           </thead>
           <tbody>
             {filtered.map((p, i) => (
-              <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <tr key={i} style={{ borderTop: "1px solid rgba(16,24,40,0.08)" }}>
                 <td style={cell}>{p.name}</td>
                 <td style={cell}>{p.pm}</td>
                 <td style={{ ...cell, color: phaseOf(p.phase).color }}>
@@ -128,7 +129,7 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ ...cell, color: "rgba(235,235,245,0.5)" }}>
+                <td colSpan={7} style={{ ...cell, color: "rgba(26,34,51,0.5)" }}>
                   No projects match the current filters.
                 </td>
               </tr>
