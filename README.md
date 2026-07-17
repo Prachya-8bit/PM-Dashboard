@@ -1,148 +1,107 @@
 # PM Dashboard
 
-A modern Next.js dashboard cloning the "Budget Status Overview" Tableau view. Displays project phases, budget vs actual tracking, and project status trends with live data from MS SQL Server.
+A modern Next.js dashboard cloning the "Budget Status Overview" Tableau view. Displays project phases, budget vs actual tracking, status trends, and a filterable project list.
 
 ## Features
 
 - **5 Phase Cards**: Budget Closed, Installation Completed, PO Created, PO On Process, PR On Process
 - **Budget vs Actual by Year**: Stacked bar charts showing committed and actual spending
 - **Project Status by Year**: Trend visualization across all years
+- **Project List**: Filterable table of all projects — filter by phase, year, or search by project name / project manager
 - **Dark Theme**: Professional, accessible UI with Recharts
-- **Server-Side Database Connection**: Direct MS SQL Server connection via Next.js API routes (no credentials in browser)
+- **Decoupled Data Path**: The web app never talks to MS SQL — it reads a local SQLite file kept fresh by a Python ETL job
+
+## Architecture
+
+```
+SYS (MS SQL Server, read-only login)
+    ↓  etl/etl.py — cron every 10 min, aggregation queries, atomic swap
+data/dashboard.db (SQLite)
+    ↓  better-sqlite3, read-only (lib/db.ts)
+Next.js server components → Recharts + Project List
+```
+
+**Why not query MS SQL directly from Next.js?** The dashboard only needs pre-aggregated data. Running aggregation once in the ETL keeps page loads fast, isolates SYS from web traffic, and means the dashboard works even when SYS is unreachable.
 
 ## Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **Charting**: Recharts
-- **Database**: MS SQL Server (read-only connection)
-- **ETL**: Python (optional data pipeline)
-- **Data Storage**: SQLite (local fallback)
+- **Data Storage**: SQLite (via better-sqlite3, read-only)
+- **ETL**: Python 3 (pymssql or pyodbc) pulling from MS SQL Server
 
 ## Quick Start
 
 ### Prerequisites
 
 - **Node.js 18+** — [install](https://nodejs.org)
-- **Python 3.8+** — for ETL (optional)
-- **MS SQL Server** credentials (read-only login recommended)
+- **Python 3.8+** — only needed to run the ETL
+- **MS SQL Server** credentials (read-only login recommended) — only needed by the ETL
 
-### Installation
+### Run the dashboard
 
 ```bash
-# Clone the repository
-git clone https://github.com/Prachya-8bit/PM-Dashboard.git
-cd PM-Dashboard
-
-# Install Node dependencies
 npm install
 
-# Set up environment
-cp .env.local.example .env.local
-# Edit .env.local with your MS SQL Server credentials
-```
-
-### Configuration
-
-All configuration is in **`lib/dashboard-data.ts`** (marked `// ADJUST`):
-
-1. **`STATUS_TO_PHASE`** — Map your exact DB status strings to phase keys
-   ```typescript
-   "PO on Process": "po_on_process",
-   "Budget Closed": "budget_closed",
-   // ... etc
-   ```
-
-2. **`TABLE`** — Your SQL table (e.g., `Database.schema.Table`)
-   ```typescript
-   const TABLE = "SysPurchaseDB.dbo.CapexProjects";
-   ```
-
-3. **`COL`** — Column names in your table
-   ```typescript
-   const COL = {
-     status: "Status",
-     budget: "Budget",
-     actual: "Actual",
-     committed: "Committed",
-     dateColumn: "CreatedDate"
-   };
-   ```
-
-4. **`.env.local`**
-   ```
-   MSSQL_USER=your_username
-   MSSQL_PASSWORD=your_password
-   MSSQL_SERVER=your_server
-   MSSQL_DATABASE=your_database
-   SQL_MB_DIVISOR=1000000  # or 1 if amounts already in millions
-   ```
-
-### Running
-
-```bash
 # Development server (http://localhost:3000)
 npm run dev
 
-# Production build
+# Production
 npm run build
 npm start
-
-# ETL pipeline (optional)
-npm run etl
 ```
 
-Visit `/dashboard` to view the dashboard.
+Visit `/dashboard` to view the dashboard. The app reads `data/dashboard.db` directly — no database credentials required.
 
-## Architecture
-
-```
-Next.js (server components)
-    ↓
-Direct pooled connection to MS SQL Server
-    (read-only, no Open WebUI/LLM layer)
-    ↓
-Recharts visualization
-```
-
-**Why direct DB connection?** Charts need deterministic, cacheable queries — not LLM-generated SQL. Open WebUI's natural-language layer is great for exploration, but unsuitable for dashboards.
-
-## Database Requirements
-
-- Table with columns for: project status, budget, actual, committed, and date
-- Suggest using a **read-only SQL login** (security best practice)
-- Identifiers (`TABLE`, `COL`) are interpolated config — keep them trusted, never user input
-- All query *values* are parameterized
-
-## Optional: ETL Pipeline
-
-The `etl/` directory includes a Python pipeline for data loading:
+### Refresh the data (ETL)
 
 ```bash
 # Install Python dependencies
 pip install -r etl/requirements.txt
 
-# Run ETL
+# Set up environment
+cp .env.local.example .env.local
+# Edit .env.local with your MS SQL Server credentials
+
+# Run once
 npm run etl
+
+# Or schedule via cron (every 10 minutes)
+*/10 * * * * cd /path/to/project && python etl/etl.py >> /var/log/dash-etl.log 2>&1
 ```
 
-**Python requirements:**
-- `pymssql>=2.3` — MS SQL driver (or `pyodbc>=5.2` for ODBC)
-- `schedule>=1.2` — job scheduling (optional, use cron otherwise)
+The ETL writes to SQLite with an atomic swap, so the dashboard never sees a half-written database.
+
+## Configuration
+
+All configuration lives in **`.env.local`** (see `.env.local.example`) and is consumed by the ETL:
+
+| Variable | Purpose |
+|---|---|
+| `SQL_SERVER`, `SQL_PORT`, `SQL_DATABASE`, `SQL_USER`, `SQL_PASSWORD` | MS SQL connection (ETL only) |
+| `SQL_ENCRYPT`, `SQL_TRUST_CERT` | TLS options for the MS SQL connection |
+| `SQL_TABLE` | Source table, e.g. `SysPurchaseDB.dbo.CapexProjects` |
+| `SQL_COL_STATUS`, `SQL_COL_BUDGET`, `SQL_COL_ACTUAL`, `SQL_COL_COMMITTED`, `SQL_COL_DATE`, `SQL_COL_NAME`, `SQL_COL_PM` | Column names in the source table |
+| `SQL_MB_DIVISOR` | `1000000` if amounts are raw Baht, `1` if already in millions |
+| `SQLITE_PATH` | SQLite output path (default `./data/dashboard.db`), read by both ETL and dashboard |
+
+**Status mapping**: `STATUS_TO_PHASE` in `etl/etl.py` maps your exact DB status strings to phase keys — adjust it if your statuses differ:
+
+```python
+STATUS_TO_PHASE = {
+    "Budget Closed":          "BUDGET_CLOSED",
+    "Installation Completed": "INSTALL_COMPLETED",
+    "PO Created":             "PO_CREATED",
+    "PO on Process":          "PO_ON_PROCESS",
+    "PR on Process":          "PR_ON_PROCESS",
+}
+```
 
 ## Customization
 
-### Period Filter (Cards only)
-
-Currently all queries span all-time. To scope the 5 phase cards to a date range (e.g., "Jan–Apr'26"):
-
-```typescript
-// In queryPhaseSummary(), add WHERE clause:
-WHERE [${COL.dateColumn}] BETWEEN @from AND @to
-```
-
 ### Caching
 
-Default: `export const dynamic = "force-dynamic"` (always fresh). For a wall display or to reduce DB load:
+Pages render with fresh SQLite reads by default. For a wall display, add revalidation:
 
 ```typescript
 // In app/dashboard/page.tsx:
@@ -151,26 +110,20 @@ export const revalidate = 300;  // Revalidate every 5 minutes
 
 ### Colors
 
-Colors are in `app/dashboard/DashboardView.tsx` — pulled from the original Tableau palette:
+Phase colors are defined in both `etl/etl.py` and `lib/dashboard-types.ts` (keep them in sync):
 
-- Budget Closed: `#1f77b4` (blue)
-- Installation Completed: `#2ca02c` (teal)
-- PO Created: `#ff7f0e` (amber)
-- PO On Process: `#d62728` (red)
-- PR On Process: `#9467bd` (purple)
+- Budget Closed: `#2D7FF9` (blue)
+- Installation Completed: `#1FBF8F` (teal)
+- PO Created: `#F5A623` (amber)
+- PO On Process: `#FF5A52` (red)
+- PR On Process: `#9B6BE0` (purple)
 
 ## Security
 
-✅ **Safe practices:**
-- Database credentials stored only in `.env.local` (server-side)
-- SQL identifiers treated as trusted config
-- All query values are parameterized
-- No credentials shipped to browser
-
-⚠️ **Keep in mind:**
-- `.env.local` is in `.gitignore` — never commit it
-- Table/column names cannot be parameterized (SQL Server limitation) — must be trusted config
+- MS SQL credentials live only in `.env.local` (gitignored) and are used only by the ETL — the web app never sees them
+- The dashboard opens SQLite **read-only**
 - Use a SQL login with minimal permissions (SELECT only)
+- `SQL_TABLE` and column names are interpolated config — keep them trusted, never user input
 
 ## Troubleshooting
 
@@ -179,15 +132,15 @@ Colors are in `app/dashboard/DashboardView.tsx` — pulled from the original Tab
 npm install
 ```
 
-### Connection errors to MS SQL
+### Dashboard shows no data
+- Check that `data/dashboard.db` exists and is non-empty — run `npm run etl` to (re)build it
+- Verify `STATUS_TO_PHASE` in `etl/etl.py` matches your DB status strings exactly
+
+### ETL connection errors
 - Verify credentials in `.env.local`
 - Check network access to SQL Server (firewall, ports)
-- Confirm table name and column names match exactly
-
-### Charts showing no data
-- Check `STATUS_TO_PHASE` mapping — statuses must match your DB exactly
-- Verify `TABLE` and `COL` references
-- Run a manual query against your DB to confirm data exists
+- Confirm `SQL_TABLE` and column env vars match your schema
+- Install a driver: `pymssql` (default) or `pyodbc` + ODBC Driver 18
 
 ## Project Structure
 
@@ -195,14 +148,18 @@ npm install
 .
 ├── app/
 │   └── dashboard/
-│       ├── page.tsx          # Main dashboard page
-│       └── DashboardView.tsx  # Chart components
+│       ├── page.tsx            # Main dashboard page (server component)
+│       ├── DashboardView.tsx   # Chart components
+│       └── project-list.tsx    # Filterable project table (client component)
 ├── lib/
-│   ├── db.ts                 # MS SQL connection pool
-│   └── dashboard-data.ts     # SQL queries & config (ADJUST HERE)
+│   ├── db.ts                   # SQLite connection (read-only singleton)
+│   ├── dashboard-data.ts       # Reads pre-aggregated tables from SQLite
+│   └── dashboard-types.ts      # Shared types + phase definitions
 ├── etl/
-│   ├── etl.py               # Python data pipeline
-│   └── requirements.txt      # Python dependencies
+│   ├── etl.py                  # MS SQL → SQLite pipeline (ADJUST STATUS_TO_PHASE HERE)
+│   └── requirements.txt        # Python dependencies
+├── data/
+│   └── dashboard.db            # Aggregated SQLite (written by ETL)
 ├── package.json
 ├── tsconfig.json
 ├── next.config.ts
@@ -212,10 +169,3 @@ npm install
 ## License
 
 Proprietary — See your organization's policies
-
-## Support
-
-For questions or issues:
-1. Check `.env.local` and `lib/dashboard-data.ts` configuration
-2. Verify MS SQL Server connectivity
-3. Review error logs in browser console and server output
