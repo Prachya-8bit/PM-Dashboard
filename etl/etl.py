@@ -3,13 +3,23 @@
 # Runs via cron every 10 minutes.
 # 1. Connects to SYS MS SQL Server (read-only)
 # 2. Runs aggregation queries
-# 3. Writes result to SQLite with atomic swap
+# 3. Rewrites SQLite in one transaction (in place — safe while the dashboard
+#    holds the file open; a rename-over swap fails on Windows)
 #
 # Usage:  python etl/etl.py
 # Cron:   */10 * * * * cd /path/to/project && python etl/etl.py >> /var/log/dash-etl.log 2>&1
+# Windows: Task Scheduler every 10 min, Start-in = project dir
 import os, sys, sqlite3, json
 from datetime import datetime
 from pathlib import Path
+
+# Load .env.local before reading os.environ (no-op if python-dotenv missing
+# and the vars are already set in the process environment)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env.local")
+except ImportError:
+    pass
 
 # --- Config from env -------------------------------------------------
 SQL_SERVER   = os.environ["SQL_SERVER"]
@@ -176,11 +186,23 @@ def fetch_projects(cursor) -> list[dict]:
 
 
 def write_sqlite(phases, yearly_budget, yearly_status, projects):
-    """Write aggregated data to SQLite atomically (write to temp, then rename)."""
-    Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = DB_PATH + ".tmp"
+    """Rewrite the live DB in one short transaction.
 
-    with sqlite3.connect(tmp_path) as db:
+    In-place (not temp-file + rename): the dashboard keeps the file open with a
+    read-only handle, and Windows cannot rename over an open file. A single
+    IMMEDIATE transaction on this small dataset holds the write lock for
+    milliseconds; readers wait it out via their busy_timeout.
+    """
+    Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
+
+    # isolation_level=None → autocommit mode, so we control the transaction
+    # explicitly; timeout waits out any straggling reader lock.
+    db = sqlite3.connect(DB_PATH, isolation_level=None, timeout=30)
+    try:
+        db.execute("BEGIN IMMEDIATE")
+        for table in ("phase_summary", "yearly_budget", "yearly_status", "projects", "metadata"):
+            db.execute(f"DROP TABLE IF EXISTS {table}")
+
         # --- phase_summary ---
         db.execute("""
             CREATE TABLE phase_summary (
@@ -250,8 +272,15 @@ def write_sqlite(phases, yearly_budget, yearly_status, projects):
         db.execute("CREATE TABLE metadata (key TEXT PRIMARY KEY, value TEXT)")
         db.execute("INSERT INTO metadata VALUES ('last_run', ?)", (datetime.now().isoformat(),))
 
-    # Atomic swap
-    os.replace(tmp_path, DB_PATH)
+        db.execute("COMMIT")
+    except Exception:
+        try:
+            db.execute("ROLLBACK")
+        except sqlite3.Error:
+            pass  # e.g. BEGIN itself failed — no transaction to roll back
+        raise
+    finally:
+        db.close()
 
 
 def main():

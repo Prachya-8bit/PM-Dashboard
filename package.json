@@ -4,9 +4,9 @@
   "private": true,
   "description": "PM Dashboard — Tableau Budget Status clone, ETL + SQLite + Next.js",
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "next dev --port 3009",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3009",
     "etl": "python etl/etl.py"
   },
   "dependencies": {

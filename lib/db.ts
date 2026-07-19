@@ -13,7 +13,9 @@ let _db: Database.Database | null = null;
 export function getDb(): Database.Database {
   if (!_db) {
     _db = new Database(DB_PATH, { readonly: true });
-    // No PRAGMAs needed for read-only — they're write ops and will fail
+    // Wait out the ETL's brief in-place rewrite instead of throwing SQLITE_BUSY.
+    // (busy_timeout is a connection setting — safe on a read-only handle.)
+    _db.pragma("busy_timeout = 5000");
   }
   return _db;
 }

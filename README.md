@@ -8,7 +8,7 @@ A modern Next.js dashboard cloning the "Budget Status Overview" Tableau view. Di
 - **Budget vs Actual by Year**: Stacked bar charts showing committed and actual spending
 - **Project Status by Year**: Trend visualization across all years
 - **Project List**: Filterable table of all projects — filter by phase, year, or search by project name / project manager
-- **Dark Theme**: Professional, accessible UI with Recharts
+- **Light Theme**: Professional, accessible UI with Recharts — light background, white cards, dark text
 - **Decoupled Data Path**: The web app never talks to MS SQL — it reads a local SQLite file kept fresh by a Python ETL job
 
 ## Architecture
@@ -70,7 +70,9 @@ npm run etl
 */10 * * * * cd /path/to/project && python etl/etl.py >> /var/log/dash-etl.log 2>&1
 ```
 
-The ETL writes to SQLite with an atomic swap, so the dashboard never sees a half-written database.
+The ETL rewrites SQLite in a single transaction (in place — Windows-safe while the dashboard holds the file open), so the dashboard never sees a half-written database.
+
+On Windows, schedule via Task Scheduler instead of cron: trigger every 10 minutes, action `py etl\etl.py`, "Start in" = project directory.
 
 ## Configuration
 
