@@ -43,7 +43,7 @@ Next.js server components → Recharts + Project List
 ```bash
 npm install
 
-# Development server (http://localhost:3000)
+# Development server (http://localhost:3009)
 npm run dev
 
 # Production

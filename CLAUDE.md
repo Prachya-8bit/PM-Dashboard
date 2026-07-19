@@ -6,7 +6,7 @@ Light theme: `#F4F6FA` page background, white cards, dark `#1A2233` text.
 ## Commands
 
 ```bash
-npm run dev     # dev server on http://localhost:3000 (dashboard lives at /dashboard)
+npm run dev     # dev server on http://localhost:3009 (dashboard lives at /dashboard)
 npm run build   # production build
 npm start       # serve production build
 npm run etl     # python etl/etl.py — refresh data/dashboard.db from MS SQL
