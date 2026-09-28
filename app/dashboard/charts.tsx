@@ -2,24 +2,56 @@
 "use client";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, LabelList,
+  ResponsiveContainer,
 } from "recharts";
-import { PHASES, type YearBudget, type YearStatus } from "@/lib/dashboard-types";
+import { PHASES, PHASE_COLOR, type YearBudget, type YearStatus } from "@/lib/dashboard-types";
 
-const PANEL: React.CSSProperties = {
-  background: "#FFFFFF",
-  border: "1px solid rgba(16,24,40,0.08)",
-  borderRadius: 16,
-  padding: "16px 18px 8px",
-  boxShadow: "0 1px 3px rgba(16,24,40,0.06)",
+const INK_2 = "#6F4E37"; // coffee
+const INK_3 = "#6F4E37"; // coffee
+const LINE = "#e7e5e4";
+const ACCENT = "#0f766e";
+const NEUTRAL = "#6F4E37"; // coffee
+
+const axisTick = {
+  fill: INK_3,
+  fontSize: 13,
+  fontFamily: "var(--font-mono), monospace",
 };
-const TITLE: React.CSSProperties = {
-  textAlign: "center",
-  fontSize: 16,
-  fontWeight: 700,
-  margin: "0 0 8px",
+
+const tooltipStyle: React.CSSProperties = {
+  background: "#ffffff",
+  border: `1px solid ${LINE}`,
+  borderRadius: 10,
+  boxShadow: "0 8px 24px -12px rgba(28,25,23,0.18)",
+  fontSize: 14,
+  padding: "8px 12px",
 };
-const axis = { stroke: "rgba(26,34,51,0.55)", fontSize: 12 };
+
+const legendStyle: React.CSSProperties = {
+  fontSize: 13.5,
+  color: INK_2,
+  paddingTop: 4,
+};
+
+function Panel({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="panel">
+      <div className="panel__head">
+        <div className="eyebrow">{hint}</div>
+        <h3 className="panel__title">{title}</h3>
+      </div>
+      <div style={{ padding: "12px 12px 8px" }}>{children}</div>
+    </div>
+  );
+}
 
 export function DashboardCharts({
   byYearBudget,
@@ -32,48 +64,53 @@ export function DashboardCharts({
     <section
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
-        gap: 16,
+        gridTemplateColumns: "1.15fr 0.85fr",
+        gap: 20,
       }}
+      className="charts-grid"
     >
-      {/* Budget vs Actual by Year */}
-      <div style={PANEL}>
-        <h3 style={TITLE}>Budget vs Actual by Year (MB)</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={byYearBudget} margin={{ top: 20, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,24,40,0.08)" />
-            <XAxis dataKey="year" tick={axis} />
-            <YAxis tick={axis} />
-            <Tooltip contentStyle={{ background: "#FFFFFF", border: "1px solid rgba(16,24,40,0.1)", borderRadius: 8, boxShadow: "0 4px 12px rgba(16,24,40,0.1)" }} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey="budgetMB" name="Budget (MB)" fill="#3E92E6" radius={[3, 3, 0, 0]}>
-              <LabelList dataKey="budgetMB" position="top" fill="#1A2233" fontSize={11}
-                formatter={(v: number) => v.toFixed(0)} />
-            </Bar>
-            <Bar dataKey="commitActualMB" name="Commit+Actual (MB)" fill="#F5A623" radius={[3, 3, 0, 0]}>
-              <LabelList dataKey="commitActualMB" position="top" fill="#1A2233" fontSize={11}
-                formatter={(v: number) => v.toFixed(0)} />
-            </Bar>
+      <style>{`
+        @media (max-width: 900px) {
+          .charts-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
+      <Panel hint="Per fiscal year · MB" title="Budget vs Commit + Actual">
+        <ResponsiveContainer width="100%" height={288}>
+          <BarChart data={byYearBudget} margin={{ top: 12, right: 8, left: -8, bottom: 0 }} barGap={6}>
+            <CartesianGrid vertical={false} stroke={LINE} />
+            <XAxis dataKey="year" tick={axisTick} axisLine={{ stroke: LINE }} tickLine={false} />
+            <YAxis tick={axisTick} axisLine={false} tickLine={false} width={40} />
+            <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(28,25,23,0.03)" }} />
+            <Legend wrapperStyle={legendStyle} iconType="circle" iconSize={8} />
+            <Bar dataKey="budgetMB" name="Budget" fill={NEUTRAL} radius={[4, 4, 0, 0]} maxBarSize={40} />
+            <Bar dataKey="commitActualMB" name="Commit + Actual" fill={ACCENT} radius={[4, 4, 0, 0]} maxBarSize={40} />
           </BarChart>
         </ResponsiveContainer>
-      </div>
+      </Panel>
 
-      {/* Project Status by Year (stacked) */}
-      <div style={PANEL}>
-        <h3 style={TITLE}>Project Status by Year (items)</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={byYearStatus} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(16,24,40,0.08)" />
-            <XAxis dataKey="year" tick={axis} />
-            <YAxis tick={axis} />
-            <Tooltip contentStyle={{ background: "#FFFFFF", border: "1px solid rgba(16,24,40,0.1)", borderRadius: 8, boxShadow: "0 4px 12px rgba(16,24,40,0.1)" }} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            {PHASES.map((p) => (
-              <Bar key={p.key} dataKey={p.key} name={p.label} stackId="s" fill={p.color} />
+      <Panel hint="Per fiscal year · count" title="Status Distribution">
+        <ResponsiveContainer width="100%" height={288}>
+          <BarChart data={byYearStatus} margin={{ top: 12, right: 8, left: -8, bottom: 0 }}>
+            <CartesianGrid vertical={false} stroke={LINE} />
+            <XAxis dataKey="year" tick={axisTick} axisLine={{ stroke: LINE }} tickLine={false} />
+            <YAxis tick={axisTick} axisLine={false} tickLine={false} width={40} />
+            <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "rgba(28,25,23,0.03)" }} />
+            <Legend wrapperStyle={legendStyle} iconType="circle" iconSize={8} />
+            {PHASES.map((p, i) => (
+              <Bar
+                key={p.key}
+                dataKey={p.key}
+                name={p.label}
+                stackId="s"
+                fill={PHASE_COLOR[p.key]}
+                radius={i === PHASES.length - 1 ? [4, 4, 0, 0] : undefined}
+                maxBarSize={44}
+              />
             ))}
           </BarChart>
         </ResponsiveContainer>
-      </div>
+      </Panel>
     </section>
   );
 }

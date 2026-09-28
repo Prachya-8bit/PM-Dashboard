@@ -10,6 +10,15 @@ export const PHASES = [
 
 export type PhaseKey = (typeof PHASES)[number]["key"];
 
+// Single source of truth for phase indicator colors (dots / thin bars only).
+export const PHASE_COLOR: Record<PhaseKey, string> = {
+  BUDGET_CLOSED:     "#2563eb",
+  INSTALL_COMPLETED: "#0d9488",
+  PO_CREATED:        "#b45309",
+  PO_ON_PROCESS:     "#be123c",
+  PR_ON_PROCESS:     "#6d28d9",
+};
+
 export interface PhaseSummary {
   key: PhaseKey;
   label: string;

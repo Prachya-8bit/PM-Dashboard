@@ -1,18 +1,7 @@
 // app/dashboard/project-list.tsx
 "use client";
 import { useMemo, useState } from "react";
-import { PHASES, type PhaseKey, type ProjectRow } from "@/lib/dashboard-types";
-
-const chip: React.CSSProperties = {
-  background: "transparent",
-  color: "#1A2233",
-  border: "1px solid rgba(16,24,40,0.2)",
-  borderRadius: 8,
-  padding: "6px 12px",
-  fontSize: 12.5,
-  cursor: "pointer",
-};
-const cell: React.CSSProperties = { padding: "8px 10px" };
+import { PHASES, PHASE_COLOR, type PhaseKey, type ProjectRow } from "@/lib/dashboard-types";
 
 export function ProjectList({ projects }: { projects: ProjectRow[] }) {
   const [phase, setPhase] = useState<PhaseKey | "ALL">("ALL");
@@ -36,55 +25,67 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
     [projects, phase, year, search]
   );
 
-  const phaseOf = (key: PhaseKey) => PHASES.find((p) => p.key === key)!;
+  const labelOf = (key: PhaseKey) => PHASES.find((p) => p.key === key)!.label;
 
   return (
-    <section
-      style={{
-        background: "#FFFFFF",
-        border: "1px solid rgba(16,24,40,0.08)",
-        borderRadius: 16,
-        padding: "16px 18px",
-        marginTop: 16,
-        boxShadow: "0 1px 3px rgba(16,24,40,0.06)",
-      }}
-    >
-      <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 12px" }}>
-        Project List ({filtered.length})
-      </h3>
+    <section className="panel" style={{ marginTop: 20, overflow: "hidden" }}>
+      <div
+        className="panel__head"
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: 16,
+          paddingBottom: 16,
+        }}
+      >
+        <div>
+          <div className="eyebrow">Detail</div>
+          <h3 className="panel__title">Project List</h3>
+        </div>
+        <span className="mono" style={{ fontSize: 14.5, color: "var(--ink-3)" }}>
+          {filtered.length} / {projects.length}
+        </span>
+      </div>
 
       {/* Filter bar */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          flexWrap: "wrap",
+          alignItems: "center",
+          padding: "0 22px 16px",
+        }}
+      >
         <button
+          className="chip"
+          data-active={phase === "ALL"}
           onClick={() => setPhase("ALL")}
-          style={{
-            ...chip,
-            borderColor: phase === "ALL" ? "#1A2233" : "rgba(16,24,40,0.2)",
-            fontWeight: phase === "ALL" ? 700 : 400,
-          }}
         >
           All
         </button>
         {PHASES.map((p) => (
           <button
             key={p.key}
+            className="chip"
+            data-active={phase === p.key}
             onClick={() => setPhase(p.key)}
-            style={{
-              ...chip,
-              color: p.color,
-              borderColor: phase === p.key ? p.color : "rgba(16,24,40,0.2)",
-              fontWeight: phase === p.key ? 700 : 400,
-            }}
           >
+            <span className="chip__dot" style={{ background: PHASE_COLOR[p.key] }} />
             {p.label}
           </button>
         ))}
+
+        <div style={{ flex: 1, minWidth: 8 }} />
+
         <select
+          className="field"
           value={year}
           onChange={(e) => setYear(e.target.value === "ALL" ? "ALL" : +e.target.value)}
-          style={{ ...chip, background: "#FFFFFF" }}
+          style={{ cursor: "pointer" }}
         >
-          <option value="ALL">All Years</option>
+          <option value="ALL">All years</option>
           {years.map((y) => (
             <option key={y} value={y}>
               {y}
@@ -92,50 +93,62 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
           ))}
         </select>
         <input
-          placeholder="Search project / PM…"
+          className="field"
+          placeholder="Search project or manager"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ ...chip, background: "#FFFFFF", minWidth: 180, cursor: "text" }}
+          style={{ minWidth: 200 }}
         />
       </div>
 
       {/* Table */}
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+      <div style={{ overflowX: "auto", maxHeight: 520, overflowY: "auto" }}>
+        <table className="tbl">
           <thead>
-            <tr style={{ color: "rgba(26,34,51,0.6)", textAlign: "left" }}>
-              <th style={cell}>Project</th>
-              <th style={cell}>Project Manager</th>
-              <th style={cell}>Status</th>
-              <th style={cell}>Year</th>
-              <th style={{ ...cell, textAlign: "right" }}>Budget (MB)</th>
-              <th style={{ ...cell, textAlign: "right" }}>Actual (MB)</th>
-              <th style={{ ...cell, textAlign: "right" }}>Committed (MB)</th>
+            <tr>
+              <th>Project</th>
+              <th>Manager</th>
+              <th>Status</th>
+              <th>Year</th>
+              <th className="num">Budget</th>
+              <th className="num">Actual</th>
+              <th className="num">Committed</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((p, i) => (
-              <tr key={i} style={{ borderTop: "1px solid rgba(16,24,40,0.08)" }}>
-                <td style={cell}>{p.name}</td>
-                <td style={cell}>{p.pm}</td>
-                <td style={{ ...cell, color: phaseOf(p.phase).color }}>
-                  {phaseOf(p.phase).label}
+              <tr key={`${p.name}-${i}`}>
+                <td style={{ fontWeight: 500 }}>{p.name}</td>
+                <td style={{ color: "var(--ink-2)" }}>{p.pm}</td>
+                <td>
+                  <span className="status">
+                    <span
+                      className="status__dot"
+                      style={{ background: PHASE_COLOR[p.phase] }}
+                    />
+                    {labelOf(p.phase)}
+                  </span>
                 </td>
-                <td style={cell}>{p.year}</td>
-                <td style={{ ...cell, textAlign: "right" }}>{p.budgetMB.toFixed(2)}</td>
-                <td style={{ ...cell, textAlign: "right" }}>{p.actualMB.toFixed(2)}</td>
-                <td style={{ ...cell, textAlign: "right" }}>{p.committedMB.toFixed(2)}</td>
+                <td className="mono" style={{ color: "var(--ink-2)" }}>{p.year}</td>
+                <td className="num mono">{p.budgetMB.toFixed(2)}</td>
+                <td className="num mono">{p.actualMB.toFixed(2)}</td>
+                <td className="num mono">{p.committedMB.toFixed(2)}</td>
               </tr>
             ))}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={7} style={{ ...cell, color: "rgba(26,34,51,0.5)" }}>
-                  No projects match the current filters.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
+
+        {filtered.length === 0 && (
+          <div className="empty">
+            <span className="empty__ring" />
+            <div style={{ fontWeight: 500, color: "var(--ink-2)" }}>
+              No matching projects
+            </div>
+            <div style={{ fontSize: 14.5, maxWidth: 280 }}>
+              Adjust the phase, year, or search filters to widen the results.
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

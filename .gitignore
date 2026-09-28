@@ -30,6 +30,10 @@ yarn-error.log*
 data/dashboard.db
 data/dashboard.db.tmp
 
+# Real internal export data — do not commit (contains budgets + staff names)
+data/export_data.csv
+data/*.csv
+
 # IDE
 .vscode/
 .idea/

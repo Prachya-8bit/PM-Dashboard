@@ -1,0 +1,15 @@
+node_modules
+.next
+out
+build
+data/dashboard.db
+data/dashboard.db.tmp
+.git
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+etl/__pycache__
+**/*.pyc
+.vscode
+.idea

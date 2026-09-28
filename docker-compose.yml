@@ -1,0 +1,10 @@
+services:
+  dashboard:
+    build: .
+    container_name: pm-dashboard
+    ports:
+      - "3009:3009"
+    environment:
+      # Where the app + seed script read/write the SQLite file inside the container
+      SQLITE_PATH: /app/data/dashboard.db
+    restart: unless-stopped
