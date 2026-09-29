@@ -20,7 +20,8 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
           (phase === "ALL" || p.phase === phase) &&
           (year === "ALL" || p.year === year) &&
           (p.name.toLowerCase().includes(search.toLowerCase()) ||
-            p.pm.toLowerCase().includes(search.toLowerCase()))
+            p.pm.toLowerCase().includes(search.toLowerCase()) ||
+            p.ioNo.toLowerCase().includes(search.toLowerCase()))
       ),
     [projects, phase, year, search]
   );
@@ -72,8 +73,9 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
             data-active={phase === p.key}
             onClick={() => setPhase(p.key)}
           >
-            <span className="chip__dot" style={{ background: PHASE_COLOR[p.key] }} />
-            {p.label}
+            <span className="status-pill" style={{ background: PHASE_COLOR[p.key] }}>
+              {p.label}
+            </span>
           </button>
         ))}
 
@@ -107,6 +109,7 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
           <thead>
             <tr>
               <th>Project</th>
+              <th>IO.no.</th>
               <th>Manager</th>
               <th>Status</th>
               <th>Year</th>
@@ -119,13 +122,13 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
             {filtered.map((p, i) => (
               <tr key={`${p.name}-${i}`}>
                 <td style={{ fontWeight: 500 }}>{p.name}</td>
+                <td className="mono" style={{ color: "var(--ink-2)" }}>{p.ioNo}</td>
                 <td style={{ color: "var(--ink-2)" }}>{p.pm}</td>
                 <td>
-                  <span className="status">
-                    <span
-                      className="status__dot"
-                      style={{ background: PHASE_COLOR[p.phase] }}
-                    />
+                  <span
+                    className="status-pill"
+                    style={{ background: PHASE_COLOR[p.phase] }}
+                  >
                     {labelOf(p.phase)}
                   </span>
                 </td>

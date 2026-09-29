@@ -10,3 +10,7 @@ schedule>=1.2.0       # Job scheduling
 
 # Utilities
 python-dotenv>=0.19   # Environment variable loading
+
+# Dev / test only (CSV-to-DB engine tests)
+pytest>=7.0           # Test runner
+hypothesis>=6.0       # Property-based tests

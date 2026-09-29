@@ -6,11 +6,14 @@ import {
 } from "recharts";
 import { PHASES, PHASE_COLOR, type YearBudget, type YearStatus } from "@/lib/dashboard-types";
 
-const INK_2 = "#6F4E37"; // coffee
-const INK_3 = "#6F4E37"; // coffee
-const LINE = "#e7e5e4";
-const ACCENT = "#0f766e";
-const NEUTRAL = "#6F4E37"; // coffee
+// Tableau-10 style palette
+const INK_2 = "#4a4a4a";
+const INK_3 = "#7a7a7a";
+const LINE = "#eadfdf";
+const ORANGE = "#F28E2B";
+const BLUE = "#4E79A7";
+const ACCENT = BLUE;    // Commit + Actual
+const NEUTRAL = ORANGE; // Budget
 
 const axisTick = {
   fill: INK_3,
@@ -89,7 +92,7 @@ export function DashboardCharts({
         </ResponsiveContainer>
       </Panel>
 
-      <Panel hint="Per fiscal year · count" title="Status Distribution">
+      <Panel hint="Per fiscal year · count" title="Status by Year(items)">
         <ResponsiveContainer width="100%" height={288}>
           <BarChart data={byYearStatus} margin={{ top: 12, right: 8, left: -8, bottom: 0 }}>
             <CartesianGrid vertical={false} stroke={LINE} />

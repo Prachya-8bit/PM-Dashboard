@@ -2,29 +2,34 @@
    Neutral zinc base, one restrained accent, mono numerals. No AI-slop glows. */
 
 :root {
-  /* Surfaces — warm-neutral zinc, consistent throughout */
-  --bg:            #fafaf9;
+  /* Palette (Tableau-10 style)
+     Blue #4E79A7 · Orange #F28E2B · Red #E15759 · Teal #76B7B2
+     Green #59A14F · Yellow #EDC948 · Purple #B07AA1 · Pink #FF9DA7
+     Brown #9C755F · Black #000000 */
+
+  /* Surfaces */
+  --bg:            #FFFAFA;
   --surface:       #ffffff;
-  --surface-2:     #f5f5f4;
-  --line:          #e7e5e4;
-  --line-strong:   #d6d3d1;
+  --surface-2:     #f6f0f0;
+  --line:          #eadfdf;
+  --line-strong:   #d8caca;
 
   /* Ink */
-  --ink:           #1c1917;
-  --ink-2:         #6F4E37; /* coffee */
-  --ink-3:         #6F4E37; /* coffee */
+  --ink:           #000000;
+  --ink-2:         #4a4a4a;
+  --ink-3:         #7a7a7a;
 
-  /* Single accent — desaturated slate-teal, not neon, not purple */
-  --accent:        #0f766e;
-  --accent-soft:   #f0fdfa;
-  --accent-line:   #99f6e4;
+  /* Single accent — palette blue */
+  --accent:        #4E79A7;
+  --accent-soft:   #eef3f8;
+  --accent-line:   #b9cee0;
 
-  /* Phase hues — muted, used as indicators only (dots / thin bars) */
-  --phase-budget:   #2563eb;
-  --phase-install:  #0d9488;
-  --phase-po:       #b45309;
-  --phase-poproc:   #be123c;
-  --phase-prproc:   #6d28d9;
+  /* Phase hues — from the palette, used as indicators (dots / thin bars) */
+  --phase-budget:   #4E79A7; /* Blue */
+  --phase-install:  #76B7B2; /* Teal */
+  --phase-po:       #B07AA1; /* Purple */
+  --phase-poproc:   #E15759; /* Red */
+  --phase-prproc:   #F28E2B; /* Orange */
 
   --radius:   10px;
   --radius-lg:16px;
@@ -32,6 +37,11 @@
 }
 
 * { box-sizing: border-box; }
+
+/* All span text renders black (wins over inline color styles) */
+span { color: #000000 !important; }
+
+
 
 html, body {
   margin: 0;
@@ -109,10 +119,6 @@ body {
   transition: background 0.18s ease;
 }
 .metric:hover { background: var(--surface-2); }
-.metric__dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  margin-bottom: 10px;
-}
 .metric__count {
   font-size: 36px;
   font-weight: 620;
@@ -176,7 +182,8 @@ body {
   transform: translateY(-1px);
 }
 .bot-agent:active { transform: translateY(1px) scale(0.98); }
-.bot-agent svg { flex-shrink: 0; }
+.bot-agent svg,
+.bot-agent img { flex-shrink: 0; }
 @media (max-width: 640px) {
   .bot-agent span { display: none; }
   .bot-agent { padding: 9px; }
@@ -206,7 +213,6 @@ body {
   background: var(--surface-2);
   font-weight: 600;
 }
-.chip__dot { width: 7px; height: 7px; border-radius: 50%; }
 
 .field {
   background: var(--surface);
@@ -245,7 +251,18 @@ body {
   display: inline-flex; align-items: center; gap: 7px;
   font-size: 14px; font-weight: 500; color: var(--ink-2);
 }
-.status__dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* Colored status label pill — background carries the phase color,
+   used across the phase strip, filter chips, and the Detail table. */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
 
 /* ---- Empty state -------------------------------------------------- */
 .empty {

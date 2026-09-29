@@ -40,6 +40,7 @@ COL_ACTUAL    = os.environ.get("SQL_COL_ACTUAL", "actual_amount")
 COL_COMMITTED = os.environ.get("SQL_COL_COMMITTED", "committed_amount")
 COL_DATE      = os.environ.get("SQL_COL_DATE", "project_date")
 COL_NAME      = os.environ.get("SQL_COL_NAME", "project_name")
+COL_IO        = os.environ.get("SQL_COL_IO", "io_no")
 COL_PM        = os.environ.get("SQL_COL_PM", "project_manager")
 
 # Status → PhaseKey mapping
@@ -166,18 +167,18 @@ def fetch_yearly_status(cursor) -> list[dict]:
 def fetch_projects(cursor) -> list[dict]:
     """Row-level: every project with its phase, year, budget, actual."""
     query = f"""
-        SELECT {COL_NAME}, {COL_PM}, {COL_STATUS}, YEAR({COL_DATE}),
+        SELECT {COL_NAME}, {COL_IO}, {COL_PM}, {COL_STATUS}, YEAR({COL_DATE}),
                {COL_BUDGET}, {COL_ACTUAL}, {COL_COMMITTED}
         FROM {TABLE}
     """
     cursor.execute(query)
     out = []
-    for name, pm, status, yr, budget, actual, committed in cursor.fetchall():
+    for name, io_no, pm, status, yr, budget, actual, committed in cursor.fetchall():
         key = STATUS_TO_PHASE.get(status)
         if not key:
             continue
         out.append({
-            "name": name, "pm": pm or "", "phase": key, "year": yr,
+            "name": name, "ioNo": str(io_no or ""), "pm": pm or "", "phase": key, "year": yr,
             "budgetMB": round((budget or 0) / MB_DIV, 2),
             "actualMB": round((actual or 0) / MB_DIV, 2),
             "committedMB": round((committed or 0) / MB_DIV, 2),
@@ -254,6 +255,7 @@ def write_sqlite(phases, yearly_budget, yearly_status, projects):
         db.execute("""
             CREATE TABLE projects (
                 name            TEXT,
+                io_no           TEXT,
                 project_manager TEXT,
                 phase_key       TEXT,
                 year            INTEGER,
@@ -263,8 +265,8 @@ def write_sqlite(phases, yearly_budget, yearly_status, projects):
             )
         """)
         db.executemany(
-            "INSERT INTO projects VALUES (?,?,?,?,?,?,?)",
-            [(p["name"], p["pm"], p["phase"], p["year"], p["budgetMB"], p["actualMB"], p["committedMB"])
+            "INSERT INTO projects VALUES (?,?,?,?,?,?,?,?)",
+            [(p["name"], p["ioNo"], p["pm"], p["phase"], p["year"], p["budgetMB"], p["actualMB"], p["committedMB"])
              for p in projects],
         )
 

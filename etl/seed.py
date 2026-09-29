@@ -62,6 +62,7 @@ def make_projects(rng: random.Random, n: int = 60) -> list[dict]:
 
         projects.append({
             "name": f"{rng.choice(PROJECT_PREFIXES)} #{i + 1:03d}",
+            "ioNo": f"0490020{rng.randint(0, 99999):05d}",
             "pm": rng.choice(PM_NAMES),
             "phase": phase,
             "year": year,
@@ -153,13 +154,13 @@ def write_sqlite(phases, yearly_budget, yearly_status, projects):
 
         db.execute("""
             CREATE TABLE projects (
-                name TEXT, project_manager TEXT, phase_key TEXT, year INTEGER,
+                name TEXT, io_no TEXT, project_manager TEXT, phase_key TEXT, year INTEGER,
                 budget_mb REAL, actual_mb REAL, committed_mb REAL
             )
         """)
         db.executemany(
-            "INSERT INTO projects VALUES (?,?,?,?,?,?,?)",
-            [(p["name"], p["pm"], p["phase"], p["year"], p["budgetMB"], p["actualMB"], p["committedMB"])
+            "INSERT INTO projects VALUES (?,?,?,?,?,?,?,?)",
+            [(p["name"], p["ioNo"], p["pm"], p["phase"], p["year"], p["budgetMB"], p["actualMB"], p["committedMB"])
              for p in projects],
         )
 

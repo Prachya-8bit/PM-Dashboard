@@ -66,6 +66,7 @@ function readProjects(): ProjectRow[] {
   const db = getDb();
   return db.prepare(`
     SELECT name,
+           io_no        AS ioNo,
            project_manager AS pm,
            phase_key    AS phase,
            year,
