@@ -21,6 +21,7 @@
 #
 # Money conversion: raw THB -> MB (millions of Baht), divisor 1,000,000.
 # Committed = max(Budget Usgae - Amt Actual, 0)  (Budget Usgae = Actual + Commitment).
+# Asset Received = Asset Recieved column (source spelling), MB-converted.
 from __future__ import annotations
 
 import csv
@@ -75,6 +76,7 @@ class ProjectRecord:
     actual_mb: float      # Amt Actual / 1_000_000, rounded 2dp
     committed_mb: float   # max(usage - actual, 0) / 1_000_000, rounded 2dp
     usage_mb: float       # Budget Usgae / 1_000_000, rounded 2dp
+    asset_received_mb: float  # Asset Recieved / 1_000_000, rounded 2dp
 
 
 @dataclass(frozen=True)
@@ -165,6 +167,7 @@ def read_projects(csv_path: Path):
             budget = parse_money(row.get("Amt Budget"))
             actual = parse_money(row.get("Amt Actual"))
             usage = parse_money(row.get("Budget Usgae"))  # actual + commitment
+            asset_received = parse_money(row.get("Asset Recieved"))  # source spelling
 
             actual_mb = _to_mb(actual)
             usage_mb = _to_mb(usage)
@@ -180,6 +183,7 @@ def read_projects(csv_path: Path):
                 actual_mb=actual_mb,
                 committed_mb=committed_mb,
                 usage_mb=usage_mb,
+                asset_received_mb=_to_mb(asset_received),
             ))
 
     return records, skipped
@@ -224,7 +228,8 @@ def aggregate(records) -> AggregatedData:
     # --- projects: row-level pass-through ---
     projects = [
         {"name": r.name, "ioNo": r.io_no, "pm": r.pm, "phase": r.phase, "year": r.year,
-         "budgetMB": r.budget_mb, "actualMB": r.actual_mb, "committedMB": r.committed_mb}
+         "budgetMB": r.budget_mb, "actualMB": r.actual_mb, "committedMB": r.committed_mb,
+         "assetReceivedMB": r.asset_received_mb}
         for r in records
     ]
 
@@ -303,12 +308,13 @@ def write_sqlite(db_path: Path, data: AggregatedData, source_name: str) -> None:
         db.execute("""
             CREATE TABLE projects (
                 name TEXT, io_no TEXT, project_manager TEXT, phase_key TEXT, year INTEGER,
-                budget_mb REAL, actual_mb REAL, committed_mb REAL
+                budget_mb REAL, actual_mb REAL, committed_mb REAL, asset_received_mb REAL
             )
         """)
         db.executemany(
-            "INSERT INTO projects VALUES (?,?,?,?,?,?,?,?)",
-            [(p["name"], p["ioNo"], p["pm"], p["phase"], p["year"], p["budgetMB"], p["actualMB"], p["committedMB"])
+            "INSERT INTO projects VALUES (?,?,?,?,?,?,?,?,?)",
+            [(p["name"], p["ioNo"], p["pm"], p["phase"], p["year"], p["budgetMB"], p["actualMB"],
+              p["committedMB"], p["assetReceivedMB"])
              for p in data.projects],
         )
 

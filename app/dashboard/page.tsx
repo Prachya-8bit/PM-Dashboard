@@ -4,6 +4,7 @@
 import { getDashboardData } from "@/lib/dashboard-data";
 import { DashboardCharts } from "./charts";
 import { ProjectList } from "./project-list";
+import { AssetReceivedStatus } from "./asset-received";
 import { PHASE_COLOR } from "@/lib/dashboard-types";
 
 export const dynamic = "force-dynamic"; // always fresh; swap for revalidate if you want caching
@@ -155,12 +156,14 @@ export default async function DashboardPage() {
                   {fmtM(p.budgetMB)}
                 </span>
               </span>
-              <span className="metric__sub" style={{ marginTop: 2 }}>
-                <span>Actual</span>
-                <span className="mono" style={{ color: "var(--ink-2)" }}>
-                  {fmtM(p.actualMB)}
+              {p.key !== "PO_ON_PROCESS" && p.key !== "PR_ON_PROCESS" && (
+                <span className="metric__sub" style={{ marginTop: 2 }}>
+                  <span>Actual</span>
+                  <span className="mono" style={{ color: "var(--ink-2)" }}>
+                    {fmtM(p.actualMB)}
+                  </span>
                 </span>
-              </span>
+              )}
             </div>
             );
           })}
@@ -175,6 +178,9 @@ export default async function DashboardPage() {
 
       {/* Filterable project list (client) */}
       <ProjectList projects={data.projects} />
+
+      {/* Asset received status — projects over 80% budget usage (client) */}
+      <AssetReceivedStatus projects={data.projects} />
     </main>
   );
 }

@@ -55,6 +55,7 @@ export interface ProjectRow {
   budgetMB: number;
   actualMB: number;
   committedMB: number;
+  assetReceivedMB: number;
 }
 
 export interface DashboardData {

@@ -264,6 +264,34 @@ body {
   white-space: nowrap;
 }
 
+/* ---- Remark tags (Asset Received panel) --------------------------- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.tag b { color: var(--ink); font-weight: 600; }
+.tag--commit {
+  border-color: #F28E2B;
+  background: rgba(242, 142, 43, 0.1);
+  color: #9a5a16;
+}
+.tag--commit b { color: #9a5a16; }
+.tag--nonasset {
+  border-color: #FF9966;
+  background: #FF9966;
+  color: #5a2600;
+}
+.tag--nonasset b { color: #5a2600; }
+
 /* ---- Empty state -------------------------------------------------- */
 .empty {
   padding: 56px 24px;

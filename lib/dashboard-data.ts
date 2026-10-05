@@ -72,7 +72,8 @@ function readProjects(): ProjectRow[] {
            year,
            budget_mb    AS budgetMB,
            actual_mb    AS actualMB,
-           committed_mb AS committedMB
+           committed_mb AS committedMB,
+           asset_received_mb AS assetReceivedMB
     FROM projects
     ORDER BY year DESC, name
   `).all() as ProjectRow[];
