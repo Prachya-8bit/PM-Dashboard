@@ -97,6 +97,7 @@ def test_read_basic(tmp_path):
     assert skipped == []
     r = records[0]
     assert r.phase == "BUDGET_CLOSED"
+    assert r.io_no == "049"  # IO.no. preserved as string (keeps leading zeros)
     assert r.year == 2022
     assert r.budget_mb == 170.0
     assert r.actual_mb == 156.87
@@ -175,9 +176,12 @@ def test_write_sqlite_schema_and_contents(tmp_path):
         assert colors["BUDGET_CLOSED"] == "#2563eb"
         assert colors["PR_ON_PROCESS"] == "#6d28d9"
 
-        # projects row count matches
+        # projects table carries io_no as the second column and round-trips it
+        proj_cols = [c[1] for c in con.execute("PRAGMA table_info(projects)").fetchall()]
+        assert proj_cols[:2] == ["name", "io_no"]
         n = con.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
         assert n == 2
+        assert con.execute("SELECT DISTINCT io_no FROM projects").fetchone()[0] == "IO001"
 
         # metadata present
         md = dict(con.execute("SELECT key, value FROM metadata").fetchall())

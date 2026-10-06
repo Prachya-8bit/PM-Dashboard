@@ -139,7 +139,7 @@ export function AssetReceivedStatus({ projects }: { projects: ProjectRow[] }) {
                         Asset Received <b className="mono">{fmt(p.assetReceivedMB)}</b>
                       </span>
                       <span className="tag tag--nonasset">
-                        Non-Asset Received <b className="mono">{fmt(nonAsset)}</b>
+                        Non-Received <b className="mono">{fmt(nonAsset)}</b>
                       </span>
                       {p.committedMB > 0 && (
                         <span className="tag tag--commit">
