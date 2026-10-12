@@ -3,8 +3,15 @@
 import { useMemo, useState } from "react";
 import { PHASES, PHASE_COLOR, type PhaseKey, type ProjectRow } from "@/lib/dashboard-types";
 
-export function ProjectList({ projects }: { projects: ProjectRow[] }) {
-  const [phase, setPhase] = useState<PhaseKey | "ALL">("ALL");
+export function ProjectList({
+  projects,
+  phase,
+  onPhaseChange,
+}: {
+  projects: ProjectRow[];
+  phase: PhaseKey | "ALL";
+  onPhaseChange: (phase: PhaseKey | "ALL") => void;
+}) {
   const [year, setYear] = useState<number | "ALL">("ALL");
   const [search, setSearch] = useState("");
 
@@ -62,7 +69,7 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
         <button
           className="chip"
           data-active={phase === "ALL"}
-          onClick={() => setPhase("ALL")}
+          onClick={() => onPhaseChange("ALL")}
         >
           All
         </button>
@@ -71,7 +78,7 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
             key={p.key}
             className="chip"
             data-active={phase === p.key}
-            onClick={() => setPhase(p.key)}
+            onClick={() => onPhaseChange(p.key)}
           >
             <span className="status-pill" style={{ background: PHASE_COLOR[p.key] }}>
               {p.label}

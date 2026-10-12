@@ -3,14 +3,11 @@
 // and hands serializable data to the client charts.
 import { getDashboardData } from "@/lib/dashboard-data";
 import { DashboardCharts } from "./charts";
-import { ProjectList } from "./project-list";
 import { AssetReceivedStatus } from "./asset-received";
-import { PHASE_COLOR } from "@/lib/dashboard-types";
+import { DashboardFilterShell } from "./filter-shell";
 
 export const dynamic = "force-dynamic"; // always fresh; swap for revalidate if you want caching
 
-const fmtM = (n: number) =>
-  n.toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const fmtInt = (n: number) =>
   n.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
@@ -118,97 +115,20 @@ export default async function DashboardPage() {
         </a>
       </header>
 
-      {/* Phase pipeline — one divided strip, no per-card boxes */}
-      <section style={{ marginBottom: 28 }}>
-        <div className="strip">
-          {data.phases.map((p, i) => {
-            const pct = data.totalProjects
-              ? (p.count / data.totalProjects) * 100
-              : 0;
-            return (
-            <div
-              className="metric reveal"
-              key={p.key}
-              style={{ ["--i" as string]: i }}
-            >
-              {p.key === "INSTALL_COMPLETED" && assetMatchesUsage > 0 && (
-                <span
-                  className="metric__bell"
-                  title={`${assetMatchesUsage} project${assetMatchesUsage === 1 ? "" : "s"} where Asset Received = Budget Usage`}
-                  aria-label={`${assetMatchesUsage} projects where Asset Received equals Budget Usage`}
-                >
-                  <svg
-                    width={15}
-                    height={15}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-                  </svg>
-                  <span className="metric__bell-count mono">{assetMatchesUsage}</span>
-                </span>
-              )}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 8,
-                  flexWrap: "wrap",
-                }}
-              >
-                <span className="metric__count mono">{fmtInt(p.count)}</span>
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color: "#000000",
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  ({pct.toFixed(1)}%)
-                </span>
-              </div>
-              <span
-                className="metric__label status-pill"
-                style={{ background: PHASE_COLOR[p.key], alignSelf: "flex-start" }}
-              >
-                {p.label}
-              </span>
-              <span className="metric__sub">
-                <span>Budget</span>
-                <span className="mono" style={{ color: "var(--ink-2)" }}>
-                  {fmtM(p.budgetMB)}
-                </span>
-              </span>
-              {p.key !== "PO_ON_PROCESS" && p.key !== "PR_ON_PROCESS" && (
-                <span className="metric__sub" style={{ marginTop: 2 }}>
-                  <span>Actual</span>
-                  <span className="mono" style={{ color: "var(--ink-2)" }}>
-                    {fmtM(p.actualMB)}
-                  </span>
-                </span>
-              )}
-            </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Charts (client) */}
-      <DashboardCharts
-        byYearBudget={data.byYearBudget}
-        byYearStatus={data.byYearStatus}
-      />
-
-      {/* Filterable project list (client) */}
-      <ProjectList projects={data.projects} />
+      {/* Phase pipeline strip + filterable project list share one phase filter (client).
+          Charts render in between (as children) to preserve the original page order. */}
+      <DashboardFilterShell
+        phases={data.phases}
+        totalProjects={data.totalProjects}
+        projects={data.projects}
+        assetMatchesUsage={assetMatchesUsage}
+      >
+        {/* Charts (client) */}
+        <DashboardCharts
+          byYearBudget={data.byYearBudget}
+          byYearStatus={data.byYearStatus}
+        />
+      </DashboardFilterShell>
 
       {/* Asset received status — projects over 80% budget usage (client) */}
       <AssetReceivedStatus projects={data.projects} />
