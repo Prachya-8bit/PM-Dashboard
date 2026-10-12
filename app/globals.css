@@ -139,6 +139,47 @@ body {
   justify-content: space-between;
   gap: 8px;
 }
+/* Bell notification badge — top-right of a metric card (Installation Completed:
+   projects where Asset Received = Budget Usage). */
+.metric__bell {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 6px;
+  border-radius: 999px;
+  border: 1px solid #76B7B2;
+  line-height: 1;
+  box-shadow: 0 2px 8px -3px rgba(28, 25, 23, 0.35);
+  cursor: default;
+  animation: bell-blink 2s ease-in-out infinite;
+}
+@keyframes bell-blink {
+  0%, 100% { background: #76B7B2; color: #ffffff; }
+  50%      { background: #ffffff; color: #76B7B2; }
+}
+.metric__bell svg { display: block; }
+.metric__bell-count {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Blinking project name — Installation Completed where Asset Received =
+   Budget Usage. Cycles through accent colors to draw attention. */
+.blink-name {
+  display: inline-block;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 5px;
+  animation: blink-color 2s ease-in-out infinite;
+}
+@keyframes blink-color {
+  0%, 100% { color: #ffffff; background: #76B7B2; }
+  50%      { color: #76B7B2; background: #ffffff; }
+}
 
 /* ---- Panel (used only where elevation earns it) ------------------ */
 .panel {

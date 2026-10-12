@@ -119,9 +119,26 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((p, i) => (
+            {filtered.map((p, i) => {
+              // Highlight: Installation Completed projects whose Asset Received
+              // equals Budget Usage (actual spend). Tiny tolerance for floats.
+              const assetMatchesUsage =
+                p.phase === "INSTALL_COMPLETED" &&
+                Math.abs(p.assetReceivedMB - p.actualMB) < 0.005;
+              return (
               <tr key={`${p.name}-${i}`}>
-                <td style={{ fontWeight: 500 }}>{p.name}</td>
+                <td style={{ fontWeight: 500 }}>
+                  {assetMatchesUsage ? (
+                    <span
+                      className="blink-name"
+                      title="Asset Received = Budget Usage"
+                    >
+                      {p.name}
+                    </span>
+                  ) : (
+                    p.name
+                  )}
+                </td>
                 <td className="mono" style={{ color: "var(--ink-2)" }}>{p.ioNo}</td>
                 <td style={{ color: "var(--ink-2)" }}>{p.pm}</td>
                 <td>
@@ -137,7 +154,8 @@ export function ProjectList({ projects }: { projects: ProjectRow[] }) {
                 <td className="num mono">{p.actualMB.toFixed(2)}</td>
                 <td className="num mono">{p.committedMB.toFixed(2)}</td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
 
